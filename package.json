@@ -1,0 +1,19 @@
+{
+  "name": "feedback-backend",
+  "version": "1.0.0",
+  "description": "Feedback system backend",
+  "main": "api/feedbacks.js",
+  "scripts": {
+    "start": "vercel dev",
+    "deploy": "vercel deploy --prod"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vikadata/vika": "^1.0.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.5.6"
+  }
+}
