@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>意见反馈管理后台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background: #f4f6fa; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 1100px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px 24px 24px 24px; }
+        h1 { text-align: center; color: #2355e6; margin-bottom: 32px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+        th, td { border: 1px solid #e0e7ef; padding: 10px 8px; text-align: left; }
+        th { background: #f7fafd; color: #2355e6; }
+        tr:nth-child(even) { background: #f4f6fa; }
+        .state-done { color: #43a047; font-weight: bold; }
+        .state-todo { color: #e53935; font-weight: bold; }
+        .meta { color: #888; font-size: 13px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>意见反馈管理后台</h1>
+        <table id="feedbackTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>问题类型</th>
+                    <th>问题描述 / 提交信息</th>
+                    <th>处理状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="4" style="text-align:center;">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="statusSelectModal" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:999;background:rgba(0,0,0,0.2);align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:24px 32px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.15);min-width:200px;">
+            <div style="margin-bottom:16px;">请选择处理状态：</div>
+            <button onclick="submitStatus('已解决')">已解决</button>
+            <button onclick="submitStatus('未解决')">未解决</button>
+            <button onclick="closeStatusSelect()" style="margin-left:16px;">取消</button>
+        </div>
+    </div>
+    <script>
+        // 配置后端服务地址
+        const API_BASE_URL = 'https://houduan-steel.vercel.app';
+
+        // 显示加载状态
+        function showLoading() {
+            const tbody = document.querySelector('#feedbackTable tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">加载中...</td></tr>';
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const tbody = document.querySelector('#feedbackTable tbody');
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">${message}</td></tr>`;
+        }
+
+        // 加载反馈数据
+        function loadFeedbacks() {
+            showLoading();
+            fetch(`${API_BASE_URL}/api/feedbacks`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(res => {
+                    const tbody = document.querySelector('#feedbackTable tbody');
+                    tbody.innerHTML = '';
+                    if (res.success && res.data && res.data.length > 0) {
+                        res.data.forEach((item, idx) => {
+                            const fields = item.fields || {};
+                            const id = item.recordId ? `#${String(idx+1).padStart(3, '0')}` : '';
+                            const type = fields.type || '';
+                            const feedback = fields.feedback || '';
+                            const state = fields["处理状态"] || '未解决';
+                            const stateClass = state === '已解决' ? 'state-done' : 'state-todo';
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${id}</td>
+                                <td>${type}</td>
+                                <td>
+                                    <div>${feedback}</div>
+                                </td>
+                                <td>
+                                    <span class="${stateClass}" style="cursor:pointer;" onclick="showStatusSelect('${item.recordId}', '${state}')">${state}</span>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">暂无反馈信息</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    showError(`加载失败：${err.message}`);
+                    console.error('加载失败:', err);
+                });
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', loadFeedbacks);
+
+        function updateStatus(recordId, newStatus) {
+            fetch(`${API_BASE_URL}/api/feedbacks-update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recordId, newStatus })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(res => {
+                if (res.success) {
+                    alert('状态更新成功！');
+                    loadFeedbacks(); // 重新加载数据而不是刷新页面
+                } else {
+                    alert('状态更新失败：' + res.message);
+                }
+            })
+            .catch(err => {
+                alert('请求失败：' + err.message);
+                console.error('更新状态失败:', err);
+            });
+        }
+
+        let currentRecordId = null;
+        function showStatusSelect(recordId, currentStatus) {
+            currentRecordId = recordId;
+            document.getElementById('statusSelectModal').style.display = 'flex';
+        }
+
+        function closeStatusSelect() {
+            document.getElementById('statusSelectModal').style.display = 'none';
+            currentRecordId = null;
+        }
+
+        function submitStatus(newStatus) {
+            if (!currentRecordId) return;
+            fetch(`${API_BASE_URL}/api/feedbacks-update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ recordId: currentRecordId, newStatus })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(res => {
+                if (res.success) {
+                    closeStatusSelect();
+                    loadFeedbacks(); // 重新加载数据而不是刷新页面
+                } else {
+                    alert('状态更新失败：' + res.message);
+                }
+            })
+            .catch(err => {
+                alert('请求失败：' + err.message);
+                console.error('更新状态失败:', err);
+            });
+        }
+    </script>
+</body>
+</html>
