@@ -44,7 +44,7 @@
     </div>
     <script>
         // 配置后端服务地址
-        const API_BASE_URL = 'https://houduan-steel.vercel.app';
+        const API_BASE_URL = '';
 
         // 显示加载状态
         function showLoading() {
@@ -61,7 +61,7 @@
         // 加载反馈数据
         function loadFeedbacks() {
             showLoading();
-            fetch(`${API_BASE_URL}/api/feedbacks`)
+            fetch(`/api/feedbacks`)
                 .then(res => {
                     if (!res.ok) {
                         throw new Error(`HTTP error! status: ${res.status}`);
@@ -106,7 +106,7 @@
         document.addEventListener('DOMContentLoaded', loadFeedbacks);
 
         function updateStatus(recordId, newStatus) {
-            fetch(`${API_BASE_URL}/api/feedbacks-update`, {
+            fetch(`/api/feedbacks-update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ recordId, newStatus })
@@ -144,7 +144,7 @@
 
         function submitStatus(newStatus) {
             if (!currentRecordId) return;
-            fetch(`${API_BASE_URL}/api/feedbacks-update`, {
+            fetch(`/api/feedbacks-update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ recordId: currentRecordId, newStatus })
