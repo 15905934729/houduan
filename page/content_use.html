@@ -1,0 +1,235 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医生管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            box-shadow: 0 12px 36px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            margin: 10px auto;
+            border-radius: 3px;
+        }
+
+        .add-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .add-button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f5f6fa;
+        }
+
+        select {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
+        }
+
+        .status-available {
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .status-disabled {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+
+        .action-buttons button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .edit-btn {
+            background-color: #f1c40f;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background-color: #f39c12;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        tr {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .status-operating {
+            color: #e67e22;
+            font-weight: 600;
+        }
+
+        .detail-btn {
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .detail-btn:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>医生信息管理</h1>
+        <button class="add-button" onclick="addRow()">
+            <i class="fas fa-plus"></i> 增加医生
+        </button>
+        <table id="table">
+            <tr>
+                <th>医生姓名</th>
+                <th>所在医院</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+            <tr>
+                <td>张医生</td>
+                <td>北京协和医院</td>
+                <td class="status-operating">正在手术中</td>
+                <td><button class="detail-btn" onclick="viewLineDetail('张医生')">查看线路详情</button></td>
+            </tr>
+            <tr>
+                <td>李医生</td>
+                <td>上海瑞金医院</td>
+                <td class="status-operating">正在手术中</td>
+                <td><button class="detail-btn" onclick="viewLineDetail('李医生')">查看线路详情</button></td>
+            </tr>
+            <tr>
+                <td>王医生</td>
+                <td>广州中山医院</td>
+                <td class="status-operating">正在手术中</td>
+                <td><button class="detail-btn" onclick="viewLineDetail('王医生')">查看线路详情</button></td>
+            </tr>
+            <tr>
+                <td>陈医生</td>
+                <td>武汉同济医院</td>
+                <td class="status-operating">正在手术中</td>
+                <td><button class="detail-btn" onclick="viewLineDetail('陈医生')">查看线路详情</button></td>
+            </tr>
+            <tr>
+                <td>刘医生</td>
+                <td>成都华西医院</td>
+                <td class="status-operating">正在手术中</td>
+                <td><button class="detail-btn" onclick="viewLineDetail('刘医生')">查看线路详情</button></td>
+            </tr>
+        </table>
+    </div>
+    <script src="./day.js"></script>
+    <script>
+        function viewLineDetail(name) {
+            alert('即将查看 ' + name + ' 的线路详情。');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f4f4; /* Optional background */
+}
+
+.chart-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 350px; /* Adjust width as needed */
+    text-align: center;
+}
+
+.chart-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 250px; /* Adjust height as needed */
+    width: 230px; /* Or set a fixed width */
+    margin-bottom: 20px;
+}
+
+/* Custom Legend Styles */
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Space between legend items */
+    margin-top: 15px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.legend-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%; /* Make it a circle */
+    margin-right: 8px;
+}
+
+.legend-label {
+    margin-right: 4px; /* Space before optional percentage */
+}
+
+.legend-percent {
+    font-size: 0.8em;
+    color: #888;
+}
+
+/* Optional: Style Chart.js Tooltip (if default isn't sufficient) */
+/* You can inspect the generated tooltip in your browser's developer tools */
+/* .chartjs-tooltip { ... } */
