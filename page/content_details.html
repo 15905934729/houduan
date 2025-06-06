@@ -1,140 +1,613 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网络线路监控</title>
+    <title>线路分析</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Microsoft YaHei', sans-serif;
-        }
-
         body {
-            background: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
             padding: 20px;
         }
 
         .container {
+            background-color: #ffffff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             max-width: 1200px;
             margin: 0 auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 2em;
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
         }
 
-        h1::after {
-            content: '';
-            display: block;
-            width: 100px;
-            height: 3px;
-            background: linear-gradient(to right, #3498db, #2ecc71);
-            margin: 10px auto;
-            border-radius: 3px;
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #2288c9;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1a6fa8;
+        }
+
+        .btn-success {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3d8b40;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: center;
-            border: 1px solid #eee;
         }
 
         th {
-            background-color: #34495e;
+            background-color: #364f6b;
             color: white;
+            text-align: center;
+            padding: 12px;
             font-weight: 500;
+        }
+
+        td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
         }
 
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
 
-        tr:hover {
-            background-color: #f5f6fa;
-        }
-
         select {
-            padding: 8px 15px;
+            padding: 5px 10px;
+            border-radius: 4px;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            outline: none;
         }
 
         .status-available {
-            color: #27ae60;
+            color: #4caf50;
+        }
+
+        .status-unavailable {
+            color: #f44336;
+        }
+
+        .delay-value,
+        .bandwidth-value,
+        .loss-value {
             font-weight: 500;
         }
 
-        .status-disabled {
-            color: #e74c3c;
-            font-weight: 500;
+        .delay-good {
+            color: #4caf50;
         }
 
-        .add-button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 25px;
+        .delay-medium {
+            color: #ff9800;
+        }
+
+        .delay-bad {
+            color: #f44336;
+        }
+
+        .bandwidth-high {
+            color: #4caf50;
+        }
+
+        .bandwidth-medium {
+            color: #ff9800;
+        }
+
+        .bandwidth-low {
+            color: #f44336;
+        }
+
+        .loss-good {
+            color: #4caf50;
+        }
+
+        .loss-bad {
+            color: #f44336;
+        }
+
+        #resultDiv {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        /* 弹出窗口样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
             border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            position: relative;
+            width: 600px;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
             cursor: pointer;
+            color: #666;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .close-button:hover {
+            color: #000;
+        }
+        
+        .modal-title {
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 18px;
+        }
+        
+        /* 添加线路弹窗样式 */
+        .add-line-form {
+            margin-top: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        /* 加载动画样式 */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 0;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-left-color: #2288c9;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
             font-size: 16px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .add-button:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-        }
-
-        .metric-good {
-            color: #27ae60;
-        }
-
-        .metric-warning {
-            color: #f39c12;
-        }
-
-        .metric-critical {
-            color: #e74c3c;
+            color: #555;
+            font-weight: 500;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>网络线路监控</h1>
-        <button class="add-button" onclick="addRow()">添加线路</button>
-        <table id="table">
-            <tr>
-                <th>线路名称</th>
-                <th>延迟 (ms)</th>
-                <th>带宽 (Mbps)</th>
-                <th>丢包率 (%)</th>
-                <th>状态</th>
-            </tr>
-        </table>
+        <div class="header">
+            <h1>线路分析</h1>
+            <button class="btn btn-primary" id="addLineButton">添加线路</button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <div></div>
+                <button class="btn btn-success" id="runWorkflowButton">AI分析</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>线路名称</th>
+                        <th>延迟 (ms)</th>
+                        <th>带宽 (Mbps)</th>
+                        <th>丢包率 (%)</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody id="lineTableBody">
+                    <tr data-line-id="1">
+                        <td>线路1</td>
+                        <td><span class="delay-value delay-good">8</span></td>
+                        <td><span class="bandwidth-value bandwidth-high">1000</span></td>
+                        <td><span class="loss-value loss-good">0.1</span></td>
+                        <td>
+                            <select class="status-select">
+                                <option value="available" selected>可用</option>
+                                <option value="unavailable">不可用</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr data-line-id="2">
+                        <td>线路2</td>
+                        <td><span class="delay-value delay-medium">13</span></td>
+                        <td><span class="bandwidth-value bandwidth-high">800</span></td>
+                        <td><span class="loss-value loss-good">0.13</span></td>
+                        <td>
+                            <select class="status-select">
+                                <option value="available" selected>可用</option>
+                                <option value="unavailable">不可用</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr data-line-id="3">
+                        <td>线路3</td>
+                        <td><span class="delay-value delay-good">5</span></td>
+                        <td><span class="bandwidth-value bandwidth-medium">500</span></td>
+                        <td><span class="loss-value loss-good">0.05</span></td>
+                        <td>
+                            <select class="status-select">
+                                <option value="available" selected>可用</option>
+                                <option value="unavailable">不可用</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr data-line-id="4">
+                        <td>线路4</td>
+                        <td><span class="delay-value delay-bad">17</span></td>
+                        <td><span class="bandwidth-value bandwidth-high">750</span></td>
+                        <td><span class="loss-value loss-good">0.1</span></td>
+                        <td>
+                            <select class="status-select">
+                                <option value="available">可用</option>
+                                <option value="unavailable" selected>不可用</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr data-line-id="5">
+                        <td>线路5</td>
+                        <td><span class="delay-value delay-medium">10</span></td>
+                        <td><span class="bandwidth-value bandwidth-low">400</span></td>
+                        <td><span class="loss-value loss-bad">0.26</span></td>
+                        <td>
+                            <select class="status-select">
+                                <option value="available">可用</option>
+                                <option value="unavailable" selected>不可用</option>
+                            </select>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="resultDiv"></div>
     </div>
-    <script src="./network.js"></script>
+    
+    <!-- 弹出窗口 -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <button class="close-button" id="closeModalButton">&times;</button>
+            <h3 class="modal-title">线路分析结果</h3>
+            <div id="modalResultContent">
+                <!-- 加载动画将在这里显示 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加线路弹窗 -->
+    <div id="addLineModal" class="modal">
+        <div class="modal-content">
+            <button class="close-button" id="closeAddLineModalButton">&times;</button>
+            <h3 class="modal-title">添加新线路</h3>
+            <div class="add-line-form">
+                <div class="form-group">
+                    <label for="lineName">线路名称</label>
+                    <input type="text" id="lineName" value="" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="lineDelay">延迟 (ms)</label>
+                    <input type="number" id="lineDelay" placeholder="请输入延迟值" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="lineBandwidth">带宽 (Mbps)</label>
+                    <input type="number" id="lineBandwidth" placeholder="请输入带宽值" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="lineLossRate">丢包率 (%)</label>
+                    <input type="number" id="lineLossRate" placeholder="请输入丢包率" min="0" step="0.01">
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" id="cancelAddLineButton">取消</button>
+                    <button class="btn btn-primary" id="confirmAddLineButton">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lineCount = 5; // 当前线路数量
+        
+        // 添加线路按钮事件
+        document.getElementById('addLineButton').addEventListener('click', () => {
+            lineCount++;
+            // 设置默认线路名称
+            document.getElementById('lineName').value = `线路${lineCount}`;
+            
+            // 清空其他输入框
+            document.getElementById('lineDelay').value = '';
+            document.getElementById('lineBandwidth').value = '';
+            document.getElementById('lineLossRate').value = '';
+            
+            // 显示添加线路弹窗
+            document.getElementById('addLineModal').style.display = 'flex';
+        });
+        
+        // 关闭添加线路弹窗
+        document.getElementById('closeAddLineModalButton').addEventListener('click', () => {
+            document.getElementById('addLineModal').style.display = 'none';
+        });
+        
+        // 取消添加线路
+        document.getElementById('cancelAddLineButton').addEventListener('click', () => {
+            document.getElementById('addLineModal').style.display = 'none';
+            lineCount--; // 恢复计数器
+        });
+        
+        // 确认添加线路
+        document.getElementById('confirmAddLineButton').addEventListener('click', () => {
+            // 获取用户输入的值
+            const lineName = document.getElementById('lineName').value;
+            const delay = document.getElementById('lineDelay').value || '10';
+            const bandwidth = document.getElementById('lineBandwidth').value || '800';
+            const lossRate = document.getElementById('lineLossRate').value || '0.1';
+            
+            // 确定延迟、带宽和丢包率的CSS类
+            const delayClass = delay <= 10 ? 'delay-good' : (delay <= 15 ? 'delay-medium' : 'delay-bad');
+            const bandwidthClass = bandwidth >= 800 ? 'bandwidth-high' : (bandwidth >= 500 ? 'bandwidth-medium' : 'bandwidth-low');
+            const lossClass = lossRate <= 0.2 ? 'loss-good' : 'loss-bad';
+            
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-line-id', lineCount);
+            
+            newRow.innerHTML = `
+                <td>${lineName}</td>
+                <td><span class="delay-value ${delayClass}">${delay}</span></td>
+                <td><span class="bandwidth-value ${bandwidthClass}">${bandwidth}</span></td>
+                <td><span class="loss-value ${lossClass}">${lossRate}</span></td>
+                <td>
+                    <select class="status-select">
+                        <option value="available" selected>可用</option>
+                        <option value="unavailable">不可用</option>
+                    </select>
+                </td>
+            `;
+            
+            document.getElementById('lineTableBody').appendChild(newRow);
+            document.getElementById('addLineModal').style.display = 'none';
+        });
+        
+        // 点击弹窗外部关闭添加线路弹窗
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('addLineModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                if (!document.querySelector(`tr[data-line-id="${lineCount}"]`)) {
+                    lineCount--; // 如果取消了则恢复计数器
+                }
+            }
+        });
+
+        // 分析按钮事件
+        document.getElementById('runWorkflowButton').addEventListener('click', async () => {
+            const personalAccessToken = 'pat_4yP8Y8Oi5HBDXIMG4VaIJ9AM7GZrao3LAtC3tIMkgj7DaoOHnz4bZkKbQCPXgpSz';
+            const workflowId = '7512819468617629746';
+            
+            const apiUrl = 'https://api.coze.cn/v1/workflow/run';
+
+            const headers = {
+                'Authorization': `Bearer ${personalAccessToken}`,
+                'Content-Type': 'application/json'
+            };
+            
+            // 收集表格中所有行数据
+            const rows = document.querySelectorAll('#lineTableBody tr');
+            const parameters = {};
+            
+            rows.forEach((row, index) => {
+                const lineId = index + 1;
+                const name = row.querySelector('td:nth-child(1)').textContent;
+                const delay = row.querySelector('.delay-value').textContent;
+                const bandwidth = row.querySelector('.bandwidth-value').textContent;
+                const lossRate = row.querySelector('.loss-value').textContent;
+                const status = row.querySelector('.status-select').value;
+                
+                // 添加到parameters，key为rode1, rode2, ...
+                parameters[`rode${lineId}`] = JSON.stringify({
+                    name,
+                    delay,
+                    bandwidth,
+                    lossRate,
+                    status
+                });
+            });
+            
+            const data = {
+                "workflow_id": workflowId,
+                "parameters": parameters
+            };
+            
+            // 显示加载提示和弹窗
+            document.getElementById('modalResultContent').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">正在生成中...</div>
+                </div>
+            `;
+            document.getElementById('resultModal').style.display = 'flex';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                // 将 JSON 转换为 Markdown 格式
+                const markdown = convertToMarkdown(result.data);
+                // 处理换行符
+                const processedMarkdown = processNewlines(markdown);
+                // 从第12位开始截取内容
+                const truncatedMarkdown = processedMarkdown.substring(12);
+                
+                // 在弹出窗口中显示结果
+                document.getElementById('modalResultContent').innerHTML = truncatedMarkdown;
+            } catch (error) {
+                console.error('请求出错:', error);
+                document.getElementById('modalResultContent').innerHTML = `请求出错: ${error.message}`;
+            }
+        });
+        
+        // 关闭弹出窗口的事件处理
+        document.getElementById('closeModalButton').addEventListener('click', () => {
+            document.getElementById('resultModal').style.display = 'none';
+        });
+        
+        // 点击弹窗外部也可以关闭弹窗
+        window.addEventListener('click', (event) => {
+            const modal = document.getElementById('resultModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // 处理换行符的函数
+        function processNewlines(text) {
+            // 将字符串中的 \n 转换为实际的换行符
+            return text.replace(/\\n/g, '<br>');
+        }
+
+        // 将 JSON 对象转换为 Markdown 格式的函数
+        function convertToMarkdown(obj, level = 0) {
+            if (obj === null) return '`null`';
+            if (typeof obj !== 'object') return `\`${obj}\``;
+            
+            const indent = '  '.repeat(level);
+            const isArray = Array.isArray(obj);
+            const items = isArray ? obj : Object.entries(obj);
+            
+            if (items.length === 0) return isArray ? '[]' : '{}';
+            
+            const lines = [];
+            if (!isArray) lines.push('| 键 | 值 |');
+            if (!isArray) lines.push('| --- | --- |');
+            
+            items.forEach((item, index) => {
+                if (isArray) {
+                    const value = typeof item === 'object' ? convertToMarkdown(item, level + 1) : `\`${item}\``;
+                    lines.push(`${indent}- ${value}`);
+                } else {
+                    const [key, value] = item;
+                    const formattedValue = typeof value === 'object' ? convertToMarkdown(value, level + 1) : `\`${value}\``;
+                    lines.push(`| ${key} | ${formattedValue} |`);
+                }
+            });
+            
+            return lines.join('\n');
+        }
+    </script>
 </body>
+
 </html>
