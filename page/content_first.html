@@ -409,7 +409,7 @@
                     // 修改updateRode函数
                     async function updateRode(recordId, newRode, selectElement) {
                         try {
-                            const response = await fetch(`/.netlify/functions/feedbacks-update`, {
+                            const response = await fetch(`/api/feedbacks-update`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
