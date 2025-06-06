@@ -94,6 +94,141 @@
             margin-left: 5px;
             color: #555;
         }
+
+        /* 添加美化下拉框的样式 */
+        .rode-select {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 30px;
+        }
+
+        .rode-select:hover {
+            border-color: #aaa;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .rode-select:focus {
+            border-color: #2355e6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(35, 85, 230, 0.2);
+        }
+
+        .rode-select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .rode-cell {
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .rode-cell:hover {
+            background-color: #f0f7ff;
+            color: #2355e6;
+        }
+
+        .rode-cell:hover:after {
+            content: "点击修改";
+            position: absolute;
+            font-size: 12px;
+            color: #888;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 5;
+            white-space: nowrap;
+        }
+
+        /* 添加消息通知样式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+        }
+
+        .notification.success {
+            background-color: #4caf50;
+        }
+
+        .notification.error {
+            background-color: #f44336;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        /* 表格样式美化 */
+        #dataTable {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        #dataTable th {
+            background-color: #f5f7fa;
+            color: #606266;
+            font-weight: 600;
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 2px solid #ebeef5;
+        }
+
+        #dataTable td {
+            padding: 10px;
+            border-bottom: 1px solid #ebeef5;
+            color: #606266;
+        }
+
+        #dataTable tr:hover {
+            background-color: #f5f7fa;
+        }
+
+        #dataTable tr:last-child td {
+            border-bottom: none;
+        }
+
         #china-map-container {
             width: 90vw;  
             max-width: 1000px;
@@ -323,6 +458,33 @@
                 </div>
 
                 <script>
+                    // 添加通知显示函数
+                    function showNotification(message, type = 'success') {
+                        // 创建通知元素
+                        const notification = document.createElement('div');
+                        notification.className = `notification ${type}`;
+                        
+                        // 添加图标
+                        const icon = type === 'success' ? 'check-circle' : 'times-circle';
+                        notification.innerHTML = `<i class="fas fa-${icon}"></i>${message}`;
+                        
+                        // 添加到body
+                        document.body.appendChild(notification);
+                        
+                        // 显示通知
+                        setTimeout(() => {
+                            notification.classList.add('show');
+                        }, 10);
+                        
+                        // 3秒后隐藏并移除
+                        setTimeout(() => {
+                            notification.classList.remove('show');
+                            setTimeout(() => {
+                                document.body.removeChild(notification);
+                            }, 300);
+                        }, 3000);
+                    }
+
                     // 修改 API_BASE_URL 指向您的 Netlify 域名
                     const API_BASE_URL = '';
 
@@ -342,6 +504,7 @@
                             updateTable(records);
                         } catch (error) {
                             console.error('获取数据失败:', error);
+                            showNotification('获取数据失败，请稍后再试', 'error');
                         }
                     }
 
@@ -364,6 +527,7 @@
                             updateTable(data.records);
                         } catch (error) {
                             console.error('搜索数据失败:', error);
+                            showNotification('搜索失败，请检查您的输入', 'error');
                         }
                     }
 
@@ -372,102 +536,10 @@
                         const tbody = document.getElementById('tableBody');
                         tbody.innerHTML = '';
 
-                        records.forEach(record => {
-                            const row = document.createElement('tr');
-                            const rode = record.fields.rode || '';
-                            const recordId = record.recordId;
-
-                            // 生成下拉框HTML
-                            let selectHtml = `<select class="rode-select" style="width: 100%; box-sizing: border-box;" data-record-id="${recordId}" data-original-rode="${rode}">`;
-                            rodeOptions.forEach(opt => {
-                                selectHtml += `<option value="${opt}"${opt === rode ? ' selected' : ''}>${opt}</option>`;
-                            });
-                            selectHtml += `</select>`;
-
-                            row.innerHTML = `
-                                <td>${record.fields.name || ''}</td>
-                                <td>${record.fields.content || ''}</td>
-                                <td>${record.fields.time || ''}</td>
-                                <td>${selectHtml}</td>
-                            `;
-                            tbody.appendChild(row);
-                        });
-
-                        // 监听所有下拉框的change事件
-                        document.querySelectorAll('.rode-select').forEach(select => {
-                            select.addEventListener('change', async function() {
-                                const recordId = this.getAttribute('data-record-id');
-                                const newRode = this.value;
-                                // 禁用下拉框防止重复提交
-                                this.disabled = true;
-                                await updateRode(recordId, newRode, this);
-                                this.disabled = false;
-                            });
-                        });
-                    }
-
-                    // 修改updateRode函数
-                    async function updateRode(recordId, newRode, selectElement) {
-                        try {
-                            const response = await fetch(`/api/feedbacks-update`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    recordId: recordId,
-                                    fields: {
-                                        rode: newRode
-                                    }
-                                })
-                            });
-
-                            const result = await response.json();
-                            if (result.success) {
-                                // 更新成功，刷新data-original-rode属性
-                                selectElement.setAttribute('data-original-rode', newRode);
-                            } else {
-                                alert('更新成功');
-                                // 恢复原来的选择
-                                selectElement.value = selectElement.getAttribute('data-original-rode');
-                            }
-                        } catch (error) {
-                            console.error('更新失败:', error);
-                            alert('更新失败');
-                            selectElement.value = selectElement.getAttribute('data-original-rode');
+                        if (!records || records.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">暂无数据</td></tr>';
+                            return;
                         }
-                    }
-
-                    // 创建线路选择下拉框
-                    function createRodeSelector(recordId, currentRode, element) {
-                        const select = document.createElement('select');
-                        rodeOptions.forEach(rode => {
-                            const option = document.createElement('option');
-                            option.value = rode;
-                            option.text = rode;
-                            if (rode === currentRode) {
-                                option.selected = true;
-                            }
-                            select.appendChild(option);
-                        });
-
-                        select.addEventListener('change', async (e) => {
-                            const newRode = e.target.value;
-                            await updateRode(recordId, newRode, element);
-                            // 移除下拉框，显示选中的值
-                            element.textContent = newRode;
-                        });
-
-                        // 替换原来的文本为下拉框
-                        element.textContent = '';
-                        element.appendChild(select);
-                        select.focus();
-                    }
-
-                    // 更新表格
-                    function updateTable(records) {
-                        const tbody = document.getElementById('tableBody');
-                        tbody.innerHTML = '';
 
                         records.forEach(record => {
                             const row = document.createElement('tr');
@@ -489,6 +561,115 @@
                                 createRodeSelector(recordId, currentRode, this);
                             });
                         });
+                    }
+
+                    // 修改updateRode函数
+                    async function updateRode(recordId, newRode, selectElement) {
+                        const originalValue = selectElement.getAttribute('data-original-rode');
+                        
+                        // 显示加载状态
+                        if (selectElement.tagName === 'SELECT') {
+                            selectElement.disabled = true;
+                        } else {
+                            // 如果是单元格，显示加载动画
+                            const originalContent = selectElement.innerHTML;
+                            selectElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 更新中...';
+                        }
+                        
+                        try {
+                            const response = await fetch(`/api/feedbacks-update`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    recordId: recordId,
+                                    fields: {
+                                        rode: newRode
+                                    }
+                                })
+                            });
+
+                            const result = await response.json();
+                            if (result.success) {
+                                // 更新成功
+                                showNotification(`线路已更新为: ${newRode}`, 'success');
+                                
+                                if (selectElement.tagName === 'TD') {
+                                    // 如果是单元格，恢复显示文本
+                                    selectElement.textContent = newRode;
+                                    // 更新data属性
+                                    selectElement.setAttribute('data-original-rode', newRode);
+                                } else if (selectElement.tagName === 'SELECT') {
+                                    // 如果是下拉框，启用它
+                                    selectElement.disabled = false;
+                                    // 更新父元素的data属性
+                                    selectElement.parentElement.setAttribute('data-original-rode', newRode);
+                                }
+                            } else {
+                                throw new Error(result.message || '更新失败');
+                            }
+                        } catch (error) {
+                            console.error('更新失败:', error);
+                            showNotification('更新失败: ' + (error.message || '服务器错误'), 'error');
+                            
+                            // 恢复原始值
+                            if (selectElement.tagName === 'SELECT') {
+                                selectElement.value = originalValue;
+                                selectElement.disabled = false;
+                            } else {
+                                // 如果是单元格，恢复显示文本
+                                selectElement.textContent = originalValue;
+                            }
+                        }
+                    }
+
+                    // 创建线路选择下拉框
+                    function createRodeSelector(recordId, currentRode, element) {
+                        // 检查是否已经打开了选择器
+                        if (element.querySelector('select')) {
+                            return;
+                        }
+                        
+                        const select = document.createElement('select');
+                        select.className = 'rode-select';
+                        
+                        rodeOptions.forEach(rode => {
+                            const option = document.createElement('option');
+                            option.value = rode;
+                            option.text = rode;
+                            if (rode === currentRode) {
+                                option.selected = true;
+                            }
+                            select.appendChild(option);
+                        });
+
+                        // 添加过渡动画效果
+                        element.style.transition = 'all 0.2s ease';
+                        
+                        // 处理选择变化
+                        select.addEventListener('change', async (e) => {
+                            const newRode = e.target.value;
+                            if (newRode !== currentRode) {
+                                await updateRode(recordId, newRode, select);
+                            }
+                        });
+                        
+                        // 处理失去焦点事件
+                        select.addEventListener('blur', () => {
+                            // 给一点延迟，确保onChange事件先触发
+                            setTimeout(() => {
+                                if (element.contains(select)) {
+                                    element.textContent = select.value;
+                                    element.setAttribute('data-original-rode', select.value);
+                                }
+                            }, 200);
+                        });
+
+                        // 替换原来的文本为下拉框
+                        element.textContent = '';
+                        element.appendChild(select);
+                        select.focus();
                     }
                 </script>
              </div>
