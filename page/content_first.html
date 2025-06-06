@@ -324,7 +324,7 @@
 
                 <script>
                     // 修改 API_BASE_URL 指向您的 Netlify 域名
-                    const API_BASE_URL = 'https://你的netlify网站域名';
+                    const API_BASE_URL = '';
 
                     // 定义可选的线路选项
                     const rodeOptions = ['线路1', '线路2', '线路3', '线路4', '线路5'];
@@ -337,7 +337,7 @@
                     // 获取所有记录
                     async function fetchRecords() {
                         try {
-                            const response = await fetch(`${API_BASE_URL}/.netlify/functions/records`);
+                            const response = await fetch(`/.netlify/functions/records`);
                             const records = await response.json();
                             updateTable(records);
                         } catch (error) {
@@ -359,7 +359,7 @@
                             if (time) queryParams.append('time', time);
                             if (rode) queryParams.append('rode', rode);
 
-                            const response = await fetch(`${API_BASE_URL}/.netlify/functions/records-search?${queryParams.toString()}`);
+                            const response = await fetch(`/.netlify/functions/records-search?${queryParams.toString()}`);
                             const data = await response.json();
                             updateTable(data.records);
                         } catch (error) {
@@ -409,7 +409,7 @@
                     // 修改updateRode函数
                     async function updateRode(recordId, newRode, selectElement) {
                         try {
-                            const response = await fetch(`${API_BASE_URL}/.netlify/functions/feedbacks-update`, {
+                            const response = await fetch(`/.netlify/functions/feedbacks-update`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
