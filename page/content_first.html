@@ -604,8 +604,10 @@
                                 } else if (selectElement.tagName === 'SELECT') {
                                     // 如果是下拉框，启用它
                                     selectElement.disabled = false;
-                                    // 更新父元素的data属性
-                                    selectElement.parentElement.setAttribute('data-original-rode', newRode);
+                                    // 检查父元素是否存在再更新data属性
+                                    if (selectElement.parentElement) {
+                                        selectElement.parentElement.setAttribute('data-original-rode', newRode);
+                                    }
                                 }
                             } else {
                                 throw new Error(result.message || '更新失败');
