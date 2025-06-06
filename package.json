@@ -1,0 +1,19 @@
+{
+  "name": "feedback-backend",
+  "version": "1.0.0",
+  "description": "Feedback system backend",
+  "main": "functions/records.js",
+  "scripts": {
+    "start": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vikadata/vika": "^1.0.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^15.0.0"
+  }
+}
