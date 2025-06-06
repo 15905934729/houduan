@@ -577,7 +577,8 @@
                         }
                         
                         try {
-                            const response = await fetch(`/api/feedbacks-update`, {
+                            // 使用records-update接口代替feedbacks-update
+                            const response = await fetch(`/api/records-update`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
