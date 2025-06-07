@@ -25,6 +25,7 @@
                 <tr>
                     <th>ID</th>
                     <th>问题类型</th>
+                    <th>线路</th>
                     <th>问题描述 / 提交信息</th>
                     <th>处理状态</th>
                 </tr>
@@ -77,12 +78,14 @@
                             const id = item.recordId ? `#${String(idx+1).padStart(3, '0')}` : '';
                             const type = fields.type || '';
                             const feedback = fields.feedback || '';
+                            const rode = fields.rode || '';
                             const state = fields["处理状态"] || '未解决';
                             const stateClass = state === '已解决' ? 'state-done' : 'state-todo';
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
                                 <td>${id}</td>
                                 <td>${type}</td>
+                                <td>${rode}</td>
                                 <td>
                                     <div>${feedback}</div>
                                 </td>
