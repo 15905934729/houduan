@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>线路分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
@@ -97,6 +98,15 @@
 
         tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+        
+        tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        tbody tr:hover {
+            background-color: #f0f8ff;
         }
 
         select {
@@ -278,6 +288,63 @@
             color: #555;
             font-weight: 500;
         }
+        
+        /* 延迟曲线图表弹窗样式 */
+        .chart-modal {
+            width: 900px;
+        }
+        
+        .chart-container {
+            width: 100%;
+            margin-top: 15px;
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+        
+        .chart-box {
+            flex: 1;
+            height: 280px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 5px;
+            background-color: #fff;
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .line-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .info-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -411,9 +478,54 @@
             </div>
         </div>
     </div>
+    
+    <!-- 延迟曲线图表弹窗 -->
+    <div id="chartModal" class="modal">
+        <div class="modal-content chart-modal">
+            <button class="close-button" id="closeChartModalButton">&times;</button>
+            <h3 class="modal-title" id="chartModalTitle">线路监控数据</h3>
+            
+            <div class="line-info">
+                <div class="info-item">
+                    <div class="info-label">线路名称</div>
+                    <div class="info-value" id="chartLineName">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">当前延迟</div>
+                    <div class="info-value" id="chartLineDelay">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">带宽</div>
+                    <div class="info-value" id="chartLineBandwidth">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">丢包率</div>
+                    <div class="info-value" id="chartLineLoss">-</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-box">
+                    <div class="chart-title">延迟 (ms)</div>
+                    <canvas id="delayChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">带宽 (Mbps)</div>
+                    <canvas id="bandwidthChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-title">丢包率 (%)</div>
+                    <canvas id="lossChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         let lineCount = 5; // 当前线路数量
+        let delayChart = null; // 延迟图表对象
+        let bandwidthChart = null; // 带宽图表对象
+        let lossChart = null; // 丢包率图表对象
         
         // 添加线路按钮事件
         document.getElementById('addLineButton').addEventListener('click', () => {
@@ -470,6 +582,9 @@
                 </td>
             `;
             
+            // 为新行添加点击事件
+            newRow.addEventListener('click', handleRowClick);
+            
             document.getElementById('lineTableBody').appendChild(newRow);
             document.getElementById('addLineModal').style.display = 'none';
         });
@@ -482,6 +597,11 @@
                 if (!document.querySelector(`tr[data-line-id="${lineCount}"]`)) {
                     lineCount--; // 如果取消了则恢复计数器
                 }
+            }
+            
+            const chartModal = document.getElementById('chartModal');
+            if (event.target === chartModal) {
+                chartModal.style.display = 'none';
             }
         });
 
@@ -565,14 +685,317 @@
             document.getElementById('resultModal').style.display = 'none';
         });
         
-        // 点击弹窗外部也可以关闭弹窗
-        window.addEventListener('click', (event) => {
-            const modal = document.getElementById('resultModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
+        // 关闭图表弹窗
+        document.getElementById('closeChartModalButton').addEventListener('click', () => {
+            document.getElementById('chartModal').style.display = 'none';
         });
-
+        
+        // 为表格行添加点击事件
+        document.querySelectorAll('#lineTableBody tr').forEach(row => {
+            row.addEventListener('click', handleRowClick);
+        });
+        
+        // 处理表格行点击事件
+        function handleRowClick(event) {
+            // 如果点击的是下拉菜单，不显示弹窗
+            if (event.target.tagName === 'SELECT' || event.target.tagName === 'OPTION') {
+                return;
+            }
+            
+            const row = event.currentTarget;
+            const lineName = row.querySelector('td:nth-child(1)').textContent;
+            const delay = parseFloat(row.querySelector('.delay-value').textContent);
+            const bandwidth = parseFloat(row.querySelector('.bandwidth-value').textContent);
+            const lossRate = parseFloat(row.querySelector('.loss-value').textContent);
+            
+            // 更新图表弹窗标题和信息
+            document.getElementById('chartModalTitle').textContent = `${lineName} 监控数据`;
+            document.getElementById('chartLineName').textContent = lineName;
+            document.getElementById('chartLineDelay').textContent = `${delay} ms`;
+            document.getElementById('chartLineBandwidth').textContent = `${bandwidth} Mbps`;
+            document.getElementById('chartLineLoss').textContent = `${lossRate} %`;
+            
+            // 生成图表数据并显示
+            showCharts(delay, bandwidth, lossRate);
+            
+            // 显示图表弹窗
+            document.getElementById('chartModal').style.display = 'flex';
+        }
+        
+        // 显示所有图表
+        function showCharts(baseDelay, baseBandwidth, baseLoss) {
+            // 获取当前时间
+            const now = new Date();
+            
+            // 生成时间标签（显示相对时间）
+            const timeLabels = [
+                "前五十分钟", 
+                "前四十分钟", 
+                "前三十分钟", 
+                "前二十分钟", 
+                "前十分钟", 
+                "现在"
+            ];
+            
+            // 显示延迟图表
+            showDelayChart(baseDelay, timeLabels);
+            
+            // 显示带宽图表
+            showBandwidthChart(baseBandwidth, timeLabels);
+            
+            // 显示丢包率图表
+            showLossChart(baseLoss, timeLabels);
+        }
+        
+        // 显示延迟曲线图表
+        function showDelayChart(baseDelay, timeLabels) {
+            const ctx = document.getElementById('delayChart').getContext('2d');
+            
+            // 如果已经有图表，先销毁
+            if (delayChart) {
+                delayChart.destroy();
+            }
+            
+            // 根据基础延迟生成随机波动的延迟数据
+            const delayData = generateRandomDelayData(baseDelay, 6);
+            
+            // 创建图表
+            delayChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: '延迟 (ms)',
+                        data: delayData,
+                        borderColor: '#2288c9',
+                        backgroundColor: 'rgba(34, 136, 201, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#2288c9'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: false,
+                                text: '延迟 (ms)'
+                            },
+                            // 根据基础延迟设置适当的最小值和最大值
+                            min: Math.max(0, baseDelay - 3),
+                            max: baseDelay + 3
+                        },
+                        x: {
+                            grid: {
+                                display: true
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `延迟: ${context.raw} ms`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 显示带宽曲线图表
+        function showBandwidthChart(baseBandwidth, timeLabels) {
+            const ctx = document.getElementById('bandwidthChart').getContext('2d');
+            
+            // 如果已经有图表，先销毁
+            if (bandwidthChart) {
+                bandwidthChart.destroy();
+            }
+            
+            // 生成随机波动的带宽数据
+            const bandwidthData = generateRandomBandwidthData(baseBandwidth, 6);
+            
+            // 创建图表
+            bandwidthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: '带宽 (Mbps)',
+                        data: bandwidthData,
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#4caf50'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: false,
+                                text: '带宽 (Mbps)'
+                            },
+                            // 根据基础带宽设置适当的最小值和最大值
+                            min: Math.max(0, baseBandwidth * 0.9),
+                            max: baseBandwidth * 1.1
+                        },
+                        x: {
+                            grid: {
+                                display: true
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `带宽: ${context.raw} Mbps`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 显示丢包率曲线图表
+        function showLossChart(baseLoss, timeLabels) {
+            const ctx = document.getElementById('lossChart').getContext('2d');
+            
+            // 如果已经有图表，先销毁
+            if (lossChart) {
+                lossChart.destroy();
+            }
+            
+            // 生成随机波动的丢包率数据
+            const lossData = generateRandomLossData(baseLoss, 6);
+            
+            // 创建图表
+            lossChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: '丢包率 (%)',
+                        data: lossData,
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f44336'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: false,
+                                text: '丢包率 (%)'
+                            },
+                            // 根据基础丢包率设置适当的最小值和最大值
+                            min: 0,
+                            max: Math.max(0.5, baseLoss * 1.5)
+                        },
+                        x: {
+                            grid: {
+                                display: true
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `丢包率: ${context.raw} %`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 生成随机波动的延迟数据
+        function generateRandomDelayData(baseDelay, count) {
+            const data = [];
+            for (let i = 0; i < count; i++) {
+                // 在基础延迟附近生成随机波动（±2ms）
+                const randomVariation = (Math.random() * 4) - 2;
+                data.push(Math.max(1, (baseDelay + randomVariation).toFixed(1)));
+            }
+            return data;
+        }
+        
+        // 生成随机波动的带宽数据
+        function generateRandomBandwidthData(baseBandwidth, count) {
+            const data = [];
+            for (let i = 0; i < count; i++) {
+                // 在基础带宽附近生成随机波动（±5%）
+                const randomVariation = (Math.random() * 0.1 - 0.05) * baseBandwidth;
+                data.push(Math.max(10, Math.round(baseBandwidth + randomVariation)));
+            }
+            return data;
+        }
+        
+        // 生成随机波动的丢包率数据
+        function generateRandomLossData(baseLoss, count) {
+            const data = [];
+            for (let i = 0; i < count; i++) {
+                // 在基础丢包率附近生成随机波动（±0.05%）
+                const randomVariation = (Math.random() * 0.1) - 0.05;
+                data.push(Math.max(0.01, (baseLoss + randomVariation).toFixed(2)));
+            }
+            return data;
+        }
+        
         // 处理换行符的函数
         function processNewlines(text) {
             // 将字符串中的 \n 转换为实际的换行符
