@@ -727,15 +727,14 @@
             // 获取当前时间
             const now = new Date();
             
-            // 生成时间标签（显示相对时间）
-            const timeLabels = [
-                "前五十分钟", 
-                "前四十分钟", 
-                "前三十分钟", 
-                "前二十分钟", 
-                "前十分钟", 
-                "现在"
-            ];
+            // 生成实时时间标签
+            const timeLabels = [];
+            for (let i = 5; i >= 0; i--) {
+                const timePoint = new Date(now.getTime() - i * 10 * 60000); // i*10分钟前
+                const hours = timePoint.getHours().toString().padStart(2, '0');
+                const minutes = timePoint.getMinutes().toString().padStart(2, '0');
+                timeLabels.push(`${hours}:${minutes}`);
+            }
             
             // 显示延迟图表
             showDelayChart(baseDelay, timeLabels);
