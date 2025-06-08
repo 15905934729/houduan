@@ -435,6 +435,63 @@
             </table>
         </div>
         
+        <!-- 告警信息区域 -->
+        <div class="alerts-container" style="margin-top: 40px; border-top: 3px solid #e0e0e0; padding-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 20px; color: #333; margin: 0; display: flex; align-items: center;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 10px; color: #f44336;"></i>
+                    系统告警中心
+                </h2>
+                <button class="btn btn-primary" style="background-color: #666; font-size: 13px;">清除已处理告警</button>
+            </div>
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eeeeee;">
+                <!-- 红色告警 - 高危 -->
+                <div class="alert-card" style="background-color: #fff; border-radius: 6px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; display: flex;">
+                    <div style="width: 6px; background-color: #f44336;"></div>
+                    <div style="padding: 16px; flex-grow: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 500; color: #f44336;">设备离线</h3>
+                            <span style="color: #999; font-size: 13px;">2023-06-20 14:01:00-之前</span>
+                        </div>
+                        <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">A5设备状态发生改变，设备下线。</p>
+                    </div>
+                    <div style="padding: 16px; display: flex; align-items: center;">
+                        <button style="background-color: #f44336; color: white; border: none; border-radius: 4px; padding: 5px 12px; font-size: 13px; cursor: pointer;">处理</button>
+                    </div>
+                </div>
+                
+                <!-- 黄色告警 - 中危 -->
+                <div class="alert-card" style="background-color: #fff; border-radius: 6px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; display: flex;">
+                    <div style="width: 6px; background-color: #ff9800;"></div>
+                    <div style="padding: 16px; flex-grow: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 500; color: #ff9800;">设备端口发生震荡</h3>
+                            <span style="color: #999; font-size: 13px;">2023-06-20 14:00:28-之前</span>
+                        </div>
+                        <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">C1设备Eth 1端口状态发生改变，流量更改转发路径。</p>
+                    </div>
+                    <div style="padding: 16px; display: flex; align-items: center;">
+                        <button style="background-color: #ff9800; color: white; border: none; border-radius: 4px; padding: 5px 12px; font-size: 13px; cursor: pointer;">处理</button>
+                    </div>
+                </div>
+                
+                <!-- 蓝色告警 - 低危 -->
+                <div class="alert-card" style="background-color: #fff; border-radius: 6px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; display: flex;">
+                    <div style="width: 6px; background-color: #2196f3;"></div>
+                    <div style="padding: 16px; flex-grow: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 500; color: #2196f3;">带宽使用率超阈值</h3>
+                            <span style="color: #999; font-size: 13px;">2023-06-20 13:45:10-之前</span>
+                        </div>
+                        <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">线路2带宽使用率达到85%，超过预设阈值(80%)，持续时间5分钟。</p>
+                    </div>
+                    <div style="padding: 16px; display: flex; align-items: center;">
+                        <button style="background-color: #2196f3; color: white; border: none; border-radius: 4px; padding: 5px 12px; font-size: 13px; cursor: pointer;">处理</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div id="resultDiv"></div>
     </div>
     
